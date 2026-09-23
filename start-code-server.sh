@@ -5,18 +5,16 @@ export PATH="/root/.local/bin:/usr/local/bin:${PATH}"
 
 : "${PASSWORD:?PASSWORD environment variable is required}"
 
-mkdir -p /data/workspace /data/config /data/antigravity
+mkdir -p /data/workspace /data/config/code-server /data/antigravity
+mkdir -p /root/.local/share
 
-# Keep Antigravity state on the attached volume when credentials are available.
-if [ -d /root/.local/share/antigravity ] && [ ! -e /data/antigravity/.initialized ]; then
+# Keep Antigravity OAuth state on the attached volume from the first run onward.
+# A symlink avoids copying stale credentials and preserves credentials obtained later.
+if [ -e /root/.local/share/antigravity ] && [ ! -L /root/.local/share/antigravity ]; then
   cp -a /root/.local/share/antigravity/. /data/antigravity/ 2>/dev/null || true
-  touch /data/antigravity/.initialized
+  rm -rf /root/.local/share/antigravity
 fi
-
-if [ -d /data/antigravity ] && [ -f /data/antigravity/.initialized ]; then
-  mkdir -p /root/.local/share/antigravity
-  cp -a /data/antigravity/. /root/.local/share/antigravity/ 2>/dev/null || true
-fi
+ln -sfn /data/antigravity /root/.local/share/antigravity
 
 exec env \
   PORT="${PORT:-8080}" \
@@ -25,4 +23,5 @@ exec env \
   --auth password \
   --cert false \
   --disable-telemetry \
+  --user-data-dir /data/config/code-server \
   /data/workspace
