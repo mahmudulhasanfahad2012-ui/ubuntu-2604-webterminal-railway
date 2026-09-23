@@ -1,23 +1,46 @@
 FROM ubuntu:26.04
 
-# Fallback for local Docker; Railway will override this
-ENV PORT=7681
 ENV DEBIAN_FRONTEND=noninteractive
+ENV PATH="/root/.local/bin:/usr/local/bin:${PATH}"
 
 RUN apt-get update \
   && apt-get install -y --no-install-recommends \
-     ca-certificates wget curl git python3 python3-pip tini fastfetch
+     bash \
+     ca-certificates \
+     curl \
+     wget \
+     git \
+     unzip \
+     zip \
+     nano \
+     vim-tiny \
+     tmux \
+     htop \
+     tree \
+     jq \
+     procps \
+     lsof \
+     net-tools \
+     build-essential \
+     python3 \
+     python3-venv \
+     python3-pip \
+     tini \
+     fastfetch \
+  && rm -rf /var/lib/apt/lists/*
 
-# Install latest ttyd (auto-updating)
-RUN wget -qO /usr/local/bin/ttyd \
-    https://github.com/tsl0922/ttyd/releases/latest/download/ttyd.x86_64 \
-  && chmod +x /usr/local/bin/ttyd
+# Install code-server and Antigravity during image build, not at container startup.
+RUN curl -fsSL https://code-server.dev/install.sh | sh
+RUN curl -fsSL https://antigravity.google/cli/install.sh | bash
 
-# Show system info on shell start (fastfetch)
-RUN echo "fastfetch || true" >> /root/.bashrc
+RUN mkdir -p /data/workspace /data/config /data/antigravity \
+  && printf '%s\n' 'export PATH="/root/.local/bin:/usr/local/bin:$PATH"' >> /root/.bashrc \
+  && printf '%s\n' 'fastfetch || true' >> /root/.bashrc
 
-EXPOSE 7681
+COPY start-code-server.sh /start-code-server.sh
+RUN chmod 0755 /start-code-server.sh
 
-ENTRYPOINT ["/usr/bin/tini","--"]
+EXPOSE 8080
 
-CMD ["/bin/bash","-lc","/usr/local/bin/ttyd --writable -i 0.0.0.0 -p ${PORT} -c ${USERNAME}:${PASSWORD} /bin/bash"]
+ENTRYPOINT ["/usr/bin/tini", "--"]
+CMD ["/start-code-server.sh"]
