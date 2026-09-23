@@ -3,6 +3,7 @@ set -euo pipefail
 
 export PATH="/root/.local/bin:/usr/local/bin:${PATH}"
 
+: "${USERNAME:?USERNAME environment variable is required}"
 : "${PASSWORD:?PASSWORD environment variable is required}"
 
 mkdir -p /data/workspace /data/config/code-server /data/antigravity
