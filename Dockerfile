@@ -31,7 +31,7 @@ RUN apt-get update \
 
 # Install code-server and Antigravity during image build, not at container startup.
 RUN curl -fsSL https://code-server.dev/install.sh | sh
-RUN curl -fsSL https://antigravity.google/cli/install.sh | bash
+RUN curl --compressed -fsSL https://antigravity.google/cli/install.sh | bash
 
 RUN mkdir -p /data/workspace /data/config /data/antigravity \
   && printf '%s\n' 'export PATH="/root/.local/bin:/usr/local/bin:$PATH"' >> /root/.bashrc \
